@@ -4,6 +4,7 @@ import io.github.bahaa.fx.platform.NativeHandleAccessor;
 import io.github.bahaa.fx.platform.macos.appkit.NSWindow;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -14,6 +15,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;
@@ -74,15 +76,20 @@ public class HelloApplication extends Application {
             System.exit(0);
         });
 
-        if (System.getProperty("os.name").toLowerCase().contains("mac1")) {
-            stage.setOnShown(event -> {
-                final var rawHandle = NativeHandleAccessor.getRawHandle(stage);
-                final var nsWindow = NSWindow.from(MemorySegment.ofAddress(rawHandle));
-                nsWindow.fullSizeContentView();
-                nsWindow.setTitleBarAppearsTransparent(true);
-                nsWindow.addToolbar();
-                nsWindow.titleVisibility(false);
-            });
+        if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+            Window.getWindows().addListener((ListChangeListener<Window>) change -> {
+                        if (change.next() && change.wasAdded()) {
+                            change.getAddedSubList().forEach(window -> {
+                                final var rawHandle = NativeHandleAccessor.getRawHandle(window);
+                                final var nsWindow = NSWindow.from(MemorySegment.ofAddress(rawHandle));
+                                nsWindow.fullSizeContentView();
+                                nsWindow.setTitleBarAppearsTransparent(true);
+                                nsWindow.addToolbar();
+                                nsWindow.titleVisibility(false);
+                            });
+                        }
+                    }
+            );
         }
 
         stage.show();
